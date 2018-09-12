@@ -1,0 +1,74 @@
+div{
+    /*word-wrap: break-word;*/
+    /*word-break: break-all;*/
+}
+body {
+    background: ivory;
+}
+#main {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+.page {
+    position: relative;
+    margin: 20px;
+    border: solid 1px #aaaaaa;
+    background: white;
+}
+.text-box {
+    position: absolute;
+}
+.highlight-text {
+    background: cornsilk;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px #afafaf;
+}
+.highlight-image {
+    box-shadow: 0px 0px 10px #989898;
+}
+
+#hint {
+    position: absolute;
+    background: #353535;
+    border-radius: 10px;
+    padding: 10px;
+
+    width: 400px;
+    height: auto;
+    min-height: 80px;
+    top: 100px;
+    left: 100px;
+}
+.triangle {
+    width: 0;
+    height: 0;
+    border-width: 24px;
+    border-style: solid;
+
+    position: absolute;
+}
+.hint-content {
+    color: white;
+    font-size: 13px;
+}
+.triangle-up {
+    border-color: transparent transparent #353535 transparent;
+    left: 190px;
+    top: -48px;
+}
+.triangle-down {
+    border-color: #353535 transparent transparent transparent;
+    left: 190px;
+    top: 100%;
+}
+.triangle-left {
+    border-color: transparent #353535 transparent transparent;
+    left: -48px;
+    top: calc(50% - 24px);
+}
+.triangle-right {
+    border-color: transparent transparent transparent #353535;
+    left: 420px;
+    top: calc(50% - 24px);
+}

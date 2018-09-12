@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <style>${style}</style>
+</head>
+<body>
+
+<div id="main"></div>
+<div id="hint" style="visibility: hidden;">
+  <div class="triangle"></div>
+  <div class="hint-content">In ﬂuid simulation, enforcing incompressibility is crucial for realism; it is also computationally expensive. Recent work has improved efﬁciency, but still requires time-steps that are impractical for real-time applications. In this work we present an iterative density solver integrated into the Position Based Dynamics framework (PBD). By formulating and solving a set of positional constraints that enforce constant density, our method allows similar incompressibility and convergence to modern smoothed particle hydrodynamic (SPH) solvers, but inherits the stability of the geometric, position based dynamics method, allowing large time steps suitable for real-time applications. We incorporate an artiﬁcial pressure term that improves particle distribution, creates surface tension, and lowers the neighborhood requirements of traditional SPH. Finally, we address the issue of energy loss by applying vorticity conﬁnement as a velocity post process</div>
+</div>
+
+<script>pagesData=${data}</script>
+<script>
+  function shuffle (array) {
+    let output = [];
+    for (let item of array) {
+      output.push(item);
+    }
+    for (let i = output.length - 1; i > 0; i--) {
+      let index = parseInt(Math.round(Math.random() * i));
+      let temp = output[index];
+      output[index] = output[i];
+      output[i] = temp;
+    }
+    return output;
+  }
+
+  function getPageTop (el) {
+    let offset = el.offsetTop;
+    if (el.offsetParent) {
+      offset += getPageTop(el.offsetParent);
+    }
+    return offset;
+  }
+
+  function getPageLeft (el) {
+    let offset = el.offsetLeft;
+    if (el.offsetParent) {
+      offset += getPageLeft(el.offsetParent);
+    }
+    return offset;
+  }
+
+  class Hint {
+    constructor (el) {
+      this.el = el;
+      this.isShow = false;
+
+      this.contentEl = this.el.getElementsByClassName('hint-content')[0];
+      this.triangleEl = this.el.getElementsByClassName('triangle')[0];
+
+      this.timeout = null;
+      this.ref = null;
+    }
+
+    eventHandler (e, item) {
+      console.log(e, item);
+      switch (e.type) {
+        case 'mouseover':
+          this._mouseoverHandler(e, item);
+          break;
+        case 'mouseout':
+          this._mouseoutHandler(e, item);
+          break;
+      }
+    }
+
+    _mouseoutHandler (e, item) {
+      if (this.timeout) {
+        clearTimeout(this.timeout);
+      }
+      if (this.ref) {
+        this.ref.unhighlight();
+        this.ref = null;
+      }
+      this.hide();
+    }
+
+    _mouseoverHandler (e, item) {
+      if (this.timeout) {
+        clearTimeout(this.timeout);
+      }
+      this.hide();
+      this.timeout = setTimeout(() => {
+        this.ref = item;
+        this.ref.highlight();
+
+        this.show(item);
+      }, 1000);
+      e.stopPropagation();
+    }
+
+    show (ref) {
+
+      let refPageTop = getPageTop(ref.el);
+      let refPageLeft = getPageLeft(ref.el);
+      let refPageWidth = ref.el.offsetWidth;
+      let refPageHeight = ref.el.offsetHeight;
+
+      this.setText(ref.getHoverHint());
+      let width = this.el.offsetWidth;
+      let height = this.el.offsetHeight;
+
+      let left, top;
+      if (refPageLeft < document.body.offsetWidth / 2) {
+        left = refPageLeft + refPageWidth + 30;
+        top = refPageTop + refPageHeight / 2 - height / 2;
+        this.setRight();
+      } else {
+        left = refPageLeft - width - 30;
+        top = refPageTop + refPageHeight / 2 - height / 2;
+        this.setLeft();
+      }
+
+      this.el.setAttribute('style', `visibility:visible;left:${left}px;top:${top}px;`);
+    }
+
+    hide () {
+      this.el.setAttribute('style', 'visibility:hidden;');
+    }
+
+    setLeft () {
+      let classList = this.triangleEl.classList;
+      classList.remove('triangle-left');
+      classList.add('triangle-right');
+    }
+
+    setRight () {
+      let classList = this.triangleEl.classList;
+      classList.remove('triangle-right');
+      classList.add('triangle-left');
+    }
+
+    setText (text) {
+      this.contentEl.innerText = text;
+    }
+  }
+
+  class Element {
+    constructor (data) {
+      this.meta = data;
+      this.el = null;
+      this.style = null;
+    }
+
+    _createElement () {}
+
+    append () {
+      if (this.parent) {
+        this.parent.el.appendChild(this.el);
+      } else {
+        let container = document.getElementById('main');
+        container.appendChild(this.el);
+      }
+    }
+
+    remove () {
+      this.el.parentNode.removeChild(this.el);
+    }
+
+    _addStyle (style=null) {
+      if (!style) {
+        style = this.style;
+      }
+      let styleStr = '';
+      for (let key in style) {
+        styleStr += Element._camelToKebab(key) + ':' + style[key] + ';';
+      }
+      this.el.setAttribute('style', styleStr);
+    }
+
+    bindEvent (eventList, handler) {
+      for (let event of eventList) {
+        this.el.addEventListener(event, handler)
+      }
+    }
+
+    getHoverHint () {
+      return null;
+    }
+
+    static _camelToKebab (string) {
+      let output = '';
+      for (let char of string) {
+        if (char >= 'a') {
+          output += char;
+        } else {
+          output += '-' + char.toLowerCase();
+        }
+      }
+      return output;
+    }
+
+    static _createElementByHtml (html) {
+      let div = document.createElement('div');
+      div.innerHTML = html;
+      return (div.childNodes.length > 1) ? div.childNodes : div.childNodes[0];
+    }
+  }
+
+  class Page extends Element {
+    constructor (data) {
+      super (data);
+      this.width = data.width;
+      this.height = data.height;
+
+      this.textBoxes = [];
+      this.images = [];
+
+      this._getStyle();
+      this._createElement();
+      this._addStyle();
+    }
+
+    _createElement () {
+      let html = `<div class="page"></div>`;
+      this.el = Element._createElementByHtml(html);
+      return this.el;
+    }
+
+    _getStyle () {
+      this.style = {
+        'position': 'relative',
+        'width': this.width + 'px',
+        'height': this.height + 'px'
+      }
+    }
+
+    appendTextBox (textBox) {
+      this.textBoxes.push(textBox);
+    }
+
+    appendImage (image) {
+      this.images.push(image);
+    }
+  }
+
+  class TextBox extends Element {
+    constructor (data, page) {
+      super (data);
+      this.parent = page;
+      this.text = data.text;
+      this.raw = data.raw;
+      this.style = data.style;
+
+      this._getStyle();
+      this._createElement();
+      this._addStyle();
+    }
+
+    _createElement () {
+      let html = `<div class="text-box">
+        ${this.text}
+      </div>`;
+      this.el = Element._createElementByHtml(html);
+      return this.el;
+    }
+
+    _getStyle () {
+      this.style['fontSize'] = parseFloat(this.style['lineHeight'].slice(0, -2)) * 0.65 + 'px';
+      return this.style;
+    }
+
+    getHoverHint () {
+      return this.raw;
+    }
+
+    highlight () {
+      this.el.classList.add('highlight-text');
+    }
+
+    unhighlight () {
+      this.el.classList.remove('highlight-text');
+    }
+  }
+
+  class Image extends Element {
+    constructor (data, page) {
+      super (data);
+      this.parent = page;
+      this.src = data.src;
+      this.style = data.style;
+
+      this._getStyle();
+      this._createElement();
+      this._addStyle();
+    }
+
+    _createElement () {
+//      let html = `<div class="image">
+//          <img src="${this.src}" alt="Not Supported Image Type!">
+//        </div>`;
+      let html = `<div class="image"></div>`;
+      this.el = Element._createElementByHtml(html);
+      return this.el;
+    }
+
+    _getStyle () {
+      this.style['background'] = Image._generate_light_color();
+    }
+
+    static _generate_light_color() {
+      let rgb = [];
+      rgb.push(Math.round(Math.random() * (255 - 180) + 180));
+      rgb.push(Math.round(Math.random() * (130)));
+      rgb.push(Math.round(Math.random() * (255)));
+      rgb = shuffle(rgb);
+      let a = Math.random() * 0.2 + 0.4;
+      return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+    }
+
+    getHoverHint () {
+      return '当前仅支持 jpeg 等常见格式的图片，不支持 pdf 中的 XObject 结构。'
+    }
+
+    highlight () {
+      this.el.classList.add('highlight-image');
+    }
+
+    unhighlight () {
+      this.el.classList.remove('highlight-image');
+    }
+  }
+</script>
+<script>
+  let hintEl = document.getElementById('hint');
+  let hint = new Hint(hintEl);
+
+  let pages = [];
+  for (let metaPage of pagesData) {
+    let page = new Page(metaPage);
+
+    for (let metaTextBox of metaPage.textBoxes) {
+      let textBox = new TextBox(metaTextBox, page);
+      page.appendTextBox(textBox);
+      textBox.bindEvent(['mouseover', 'mouseout'], function (e) {
+        hint.eventHandler(e, this)
+      }.bind(textBox));
+      textBox.append();
+    }
+
+    for (let metaImage of metaPage.images) {
+      let image = new Image(metaImage, page);
+      page.appendImage(image);
+      image.bindEvent(['mouseover', 'mouseout'], function (e) {
+        hint.eventHandler(e, this)
+      }.bind(image));
+      image.append();
+    }
+
+    pages.push(page);
+  }
+
+  // 为了减少重排次数，将 page 放在最后 append，
+  // 从而使得 textBox 和 image 的 append 不会触发重排
+  for (let page of pages) {
+    page.append();
+  }
+</script>
+</body>
+</html>
