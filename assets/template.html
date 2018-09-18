@@ -15,6 +15,60 @@
 
 <script>pagesData=${data}</script>
 <script>
+  function rtrim(s){
+    return s.replace(/(\s*$)/g, "");
+  }
+
+  // 将 px 结尾的样式字符串转换为 double 数据
+  function pxstyleToFloat(string) {
+    // 基本上，如果仅仅是 px 结尾的都是可以直接 parseFloat 的
+//    return parseFloat(string.slice(0, -2));
+    return parseFloat(string);
+  }
+
+  // TODO:未考虑单词的完整性，最好在后面做一次重写
+  function setTextHidden (el, text) {
+    let left = 0, right = text.length - 1;
+    let curr, currStr;
+
+    let formerVisibility = el.style.visibility;
+    el.style.visibility = 'hidden';
+
+    let heightStyle = el.style.height;
+    let maxHeight = Math.floor(pxstyleToFloat(heightStyle));
+    el.style.height = '';
+
+    el.innerText = text;
+    if (pxstyleToFloat(el.clientHeight) <= maxHeight) {
+      el.style.height = heightStyle;
+      el.style.visibility = formerVisibility;
+      return text;
+    }
+
+    while (left < right - 1) {
+      curr = Math.ceil((left + right) / 2);
+      currStr = text.slice(0, curr);
+      el.innerText = currStr;
+      if (pxstyleToFloat(el.clientHeight) <= maxHeight) {
+        left = curr;
+      } else {
+        right = curr;
+      }
+    }
+    if (pxstyleToFloat(el.clientHeight) <= maxHeight) {
+      currStr = currStr.slice(0, -3) + '...';
+    } else {
+      // 当舍去最后一个字符时，其可能末尾存在空格，如果将空格替换为 ...
+      // 则可能导致高度超出，因此保守的方式是将空格全部舍去，不过这样就必然会破坏单词的完整性
+      currStr = rtrim(currStr.slice(0, -1)).slice(0, -3) + '...';
+    }
+    el.innerText = currStr;
+    el.style.height = heightStyle;
+    el.style.visibility = formerVisibility;
+
+    return currStr;
+  }
+
   function shuffle (array) {
     let output = [];
     for (let item of array) {
@@ -58,7 +112,6 @@
     }
 
     eventHandler (e, item) {
-      console.log(e, item);
       switch (e.type) {
         case 'mouseover':
           this._mouseoverHandler(e, item);
@@ -247,21 +300,37 @@
       this.raw = data.raw;
       this.style = data.style;
 
+      this.hiddenText = null;
+
       this._getStyle();
       this._createElement();
       this._addStyle();
     }
 
+    // 由于 append 前无法计算 dom 高度，因此无法计算多行省略，需要 override append 函数
+    append () {
+      if (this.parent) {
+        this.parent.el.appendChild(this.el);
+      } else {
+        let container = document.getElementById('main');
+        container.appendChild(this.el);
+      }
+
+      this.el.style.visibility = 'hidden';
+      this.hiddenText = setTextHidden(this.el, this.text);
+      this.el.style.visibility = '';
+    }
+
     _createElement () {
       let html = `<div class="text-box">
-        ${this.text}
       </div>`;
       this.el = Element._createElementByHtml(html);
       return this.el;
     }
 
     _getStyle () {
-      this.style['fontSize'] = parseFloat(this.style['lineHeight'].slice(0, -2)) * 0.65 + 'px';
+//      this.style['fontSize'] = pxstyleToDouble(this.style['lineHeight']) * 0.65 + 'px';
+      this.style['fontSize'] = pxstyleToFloat(this.style['lineHeight']) * 0.8 + 'px';
       return this.style;
     }
 
@@ -270,10 +339,14 @@
     }
 
     highlight () {
+      this.el.innerText = this.text;
+      this.el.style.height = '';
       this.el.classList.add('highlight-text');
     }
 
     unhighlight () {
+      this.el.innerText = this.hiddenText;
+      this.el.style.height = this.style.height;
       this.el.classList.remove('highlight-text');
     }
   }
@@ -333,6 +406,7 @@
   let pages = [];
   for (let metaPage of pagesData) {
     let page = new Page(metaPage);
+    page.append();
 
     for (let metaTextBox of metaPage.textBoxes) {
       let textBox = new TextBox(metaTextBox, page);
@@ -355,11 +429,11 @@
     pages.push(page);
   }
 
-  // 为了减少重排次数，将 page 放在最后 append，
-  // 从而使得 textBox 和 image 的 append 不会触发重排
-  for (let page of pages) {
-    page.append();
-  }
+  // 本来为了减少重排次数，应该将 page 放在最后 append，
+  // 但是为了保证多行省略的计算，只能将 page 的 append 操作提前
+//  for (let page of pages) {
+//    page.append();
+//  }
 </script>
 </body>
 </html>

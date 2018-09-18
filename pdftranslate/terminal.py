@@ -56,11 +56,18 @@ class Terminal(object):
         self.show_process(True)
         print('处理完毕，结果输出到：' + self.path)
 
+    def show_warning(self, warning_str=None):
+        if warning_str is None:
+            print('\nWarning: 未知警告')
+        else:
+            print('\nWarning: ' + warning_str)
+        return
+
     def show_error(self, error_str=None):
         if error_str is None:
-            print('\n出现未知错误，程序终止。')
+            print('\nError: 出现未知错误，程序终止。')
         else:
-            print('\n错误：' + error_str + '\n程序终止。')
+            print('\nError: ' + error_str + '\n程序终止。')
         return
 
 

@@ -22,18 +22,34 @@ def line_height_partial(min=None, max=None):
 
 
 class Printer(object):
-    def __init__(self, path, title='', theme='default'):
+    def __init__(self, path, title='', theme='default', type='html', translated=True):
         self.path = path
         self.title = title
         self.theme = theme
+        self.type = type
+        self.translated = translated
 
         self.pages = []
         self.count = 0
 
     def print_txt_page(self, parsed_layout):
+        page = []
+        for item in parsed_layout.children:
+            if isinstance(item, ParsedTextBox):
+                text = item.get_text()
+                raw_text = item.get_raw_text()
+
+                text_box = dict({
+                    'text': text,
+                    'raw': raw_text
+                })
+                page.append(text_box)
+        self.pages.append(page)
         return
 
     def print_txt_all(self, layouts):
+        for parsed_layout in layouts:
+            self.print_txt_all(parsed_layout)
         return
 
     def print_html_page(self, parsed_layout, text_filter=None):
@@ -86,18 +102,32 @@ class Printer(object):
             self.print_html_page(parsed_layout)
 
     def save(self):
-        style_sheets = self._get_stylesheet()
-        template_file = codecs.open('./assets/template.html', "r", 'utf-8')
-        # template_file = open('./assets/template.html', 'r')
-        template = template_file.read()
-        template_file.close()
+        output = ''
+        if self.type == 'html':
+            style_sheets = self._get_stylesheet()
+            template_file = codecs.open('./assets/template.html', "r", 'utf-8')
+            # template_file = open('./assets/template.html', 'r')
+            template = template_file.read()
+            template_file.close()
 
-        template = template.replace('${title}', self.title, 1)
-        template = template.replace('${style}', style_sheets, 1)
-        template = template.replace('${data}', json.dumps(self.pages), 1)
+            template = template.replace('${title}', self.title, 1)
+            template = template.replace('${style}', style_sheets, 1)
+            template = template.replace('${data}', json.dumps(self.pages), 1)
+            output = template
+        elif self.type == 'txt':
+            output = ''
+            page_index = 1
+            for page in self.pages:
+                output += 'PAGE ' + str(page_index) + ':\n'
+                for text_box in page:
+                    if self.translated:
+                        output += text_box['raw'] + '\n'
+                    output += text_box['text'] + '\n'
+                output += '\n'
+                page_index += 1
 
         fp = codecs.open(self.path, "w", 'utf-8')
-        fp.write(template)
+        fp.write(output)
         fp.close()
 
     def _get_stylesheet(self):
