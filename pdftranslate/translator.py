@@ -6,24 +6,37 @@ import json
 
 from pdftranslate.parser import ParsedTextBox
 
-# TKK=eval('((function(){var a\x3d1101234144;var b\x3d-234397642;return 426728+\x27.\x27+(a+b)})())');
-Reg_tkk = "TKK=eval\(\'\(\(function\(\){var a\\\\x3d(-?[0-9]*);var b\\\\x3d(-?[0-9]*);return (-?[0-9]*)\+\\\\x27.\\\\x27\+\(a\+b\)}\)\(\)\)\'\);"
 Index_url = r'https://translate.google.cn/'
 Base_url = r'https://translate.google.cn/translate_a/single'
 Supported_languages = ['en', 'zh-CN', 'ja']
 
+# 后续 TK 的计算方式可能还会改变，所以只能用着持续跟进了
+# 之前版本的 TKK 计算方式，现在已经被船新版本替代了
+# # TKK=eval('((function(){var a\x3d1101234144;var b\x3d-234397642;return 426728+\x27.\x27+(a+b)})())');
+# Reg_tkk = "TKK=eval\(\'\(\(function\(\){var a\\\\x3d(-?[0-9]*);var b\\\\x3d(-?[0-9]*);return (-?[0-9]*)\+\\\\x27.\\\\x27\+\(a\+b\)}\)\(\)\)\'\);"
+#
+#
+# def calc_tkk(ret):
+#     regs = ret.regs
+#     # print("TKK=eval('((function(){var a\\x3d" + ret.string[regs[1][0]:regs[1][1]] +
+#     #       ";var b\\x3d" + ret.string[regs[2][0]:regs[2][1]] +
+#     #       ";return " + ret.string[regs[3][0]:regs[3][1]] + "+\\x27.\\x27+(a+b)})())');")
+#
+#     a = int(ret.string[regs[1][0]:regs[1][1]])
+#     b = int(ret.string[regs[2][0]:regs[2][1]])
+#     c = int(ret.string[regs[3][0]:regs[3][1]])
+#     temp = a + b
+#     return str(c) + '.' + str(temp)
+
+Reg_tkk = "TKK=\'(-?[0-9]*).(-?[0-9]*)\';"
+
 
 def calc_tkk(ret):
     regs = ret.regs
-    # print("TKK=eval('((function(){var a\\x3d" + ret.string[regs[1][0]:regs[1][1]] +
-    #       ";var b\\x3d" + ret.string[regs[2][0]:regs[2][1]] +
-    #       ";return " + ret.string[regs[3][0]:regs[3][1]] + "+\\x27.\\x27+(a+b)})())');")
 
     a = int(ret.string[regs[1][0]:regs[1][1]])
     b = int(ret.string[regs[2][0]:regs[2][1]])
-    c = int(ret.string[regs[3][0]:regs[3][1]])
-    temp = a + b
-    return str(c) + '.' + str(temp)
+    return str(a) + '.' + str(b)
 
 
 def get_tkk():
