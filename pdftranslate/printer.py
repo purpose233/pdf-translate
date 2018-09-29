@@ -6,6 +6,8 @@ from pdftranslate.parser import ParsedTextBox, ParsedImage
 
 Default_margin = 20
 Default_ratio = 2
+Default_style_file = './assets/default.css'
+Default_template_file = './assets/template.html'
 
 
 def line_height_partial(min=None, max=None):
@@ -105,7 +107,7 @@ class Printer(object):
         output = ''
         if self.type == 'html':
             style_sheets = self._get_stylesheet()
-            template_file = codecs.open('./assets/template.html', "r", 'utf-8')
+            template_file = codecs.open(Default_template_file, "r", 'utf-8')
             # template_file = open('./assets/template.html', 'r')
             template = template_file.read()
             template_file.close()
@@ -131,9 +133,8 @@ class Printer(object):
         fp.close()
 
     def _get_stylesheet(self):
-        # 静态资源的获取路径仍是一个问题，也许我应该把所有的静态文件放到内存中
         if self.theme is 'default':
-            fp = open('./assets/default.css', 'r')
+            fp = open(Default_style_file, 'r')
             style = fp.read()
             fp.close()
             return style
