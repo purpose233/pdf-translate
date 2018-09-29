@@ -15,6 +15,7 @@ argparser.add_argument('--to_lang', type=str, default='zh-CN')
 argparser.add_argument('--min_font', type=int, default=None)
 argparser.add_argument('--max_font', type=int, default=None)
 argparser.add_argument('--translate', type=bool, default=True)
+argparser.add_argument('--page', type=int, default=None)
 args = argparser.parse_args()
 
 src_path = args.src
@@ -23,6 +24,7 @@ out_type = args.type
 from_lang = args.from_lang
 to_lang = args.to_lang
 translated = args.translate
+page_count = args.page
 
 terminal = Terminal(out_path)
 
@@ -40,6 +42,10 @@ if from_lang not in Supported_languages or to_lang not in Supported_languages or
     translated = False
     terminal.show_warning('不合法的输入与输出语言，程序将禁用翻译功能。')
     sys.exit(1)
+
+if page_count < 1:
+    terminal.show_warning('转换的页数需大于等于1，将默认转换全部内容')
+    page_count = None
 
 text_filter = line_height_partial(max=args.max_font, min=args.min_font)
 
@@ -62,7 +68,11 @@ try:
     stored_pages = []
     for page in pages:
         stored_pages.append(page)
-    terminal.set_page_count(len(stored_pages))
+
+    if page_count is not None:
+        terminal.set_page_count(page_count)
+    else:
+        terminal.set_page_count(len(stored_pages))
 
     terminal.show_begin()
 
@@ -79,7 +89,7 @@ try:
         elif out_type == 'txt':
             printer.print_txt_page(parsed_layout)
         count += 1
-        if count >= 1:
+        if page_count is not None and count >= page_count:
             break
     printer.save()
 except Exception as e:
@@ -97,36 +107,4 @@ terminal.show_end()
 # TODO: 一个 textbox 内部可能有一个复杂的相对位置的结构，同时看起来在同一个 box 内部的文字可能会分在两个部分，导致出现遮挡问题
 # TODO: 竖排文字的处理，可能还有旋转之类的操作。。。
 
-# try:
-#     parser = Parser(src_path)
-#     pages = parser.get_pages()
-#     printer = Printer(dest_path)
-#
-#     translator = Translator()
-#
-#     text_filter = line_height_partial(max=30)
-#
-#     # 由于 pages 是 generator，无法获取长度，因此先全部读取到内存中
-#     stored_pages = []
-#     for page in pages:
-#         stored_pages.append(page)
-#     terminal.set_page_count(len(stored_pages))
-#
-#     terminal.show_begin()
-#
-#     count = 0
-#     for page in stored_pages:
-#         parsed_layout = parser.parse_page(page)
-#
-#         terminal.begin_page(parsed_layout.get_translated_count())
-#
-#         translator.translate_layout(parsed_layout, 'en', 'zh-CN', call_terminal)
-#         printer.print_page(parsed_layout, text_filter=text_filter)
-#         count += 1
-#         if count > 1:
-#             break
-#     printer.save()
-#
-# except Exception as e:
-#     terminal.show_error(repr(e))
-#     sys.exit(1)
+# 示例输入：python ./main.py --src=./temp/test01.pdf --out=./temp/output.html --type=html --from_lang=en --to_lang=zh-CN --translate=1 --page=1
