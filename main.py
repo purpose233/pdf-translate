@@ -7,14 +7,20 @@ from pdftranslate.printer import Printer, line_height_partial
 from pdftranslate.terminal import Terminal
 
 argparser = argparse.ArgumentParser(description='manual to this script')
-argparser.add_argument('--src', type=str, default=None)
-argparser.add_argument('--out', type=str, default=None)
+argparser.add_argument('--src', type=str, default=None, required=True)
+argparser.add_argument('--out', type=str, default=None, required=True)
 argparser.add_argument('--type', type=str, default='html')
 argparser.add_argument('--from_lang', type=str, default='en')
 argparser.add_argument('--to_lang', type=str, default='zh-CN')
 argparser.add_argument('--min_font', type=int, default=None)
 argparser.add_argument('--max_font', type=int, default=None)
-argparser.add_argument('--translate', type=bool, default=True)
+# argparser.add_argument('--translate', type=bool, default=True)
+
+translated_parser = argparser.add_mutually_exclusive_group(required=False)
+translated_parser.add_argument('--translate', dest='translate', action='store_true')
+translated_parser.add_argument('--no-translate', dest='translate', action='store_false')
+argparser.set_defaults(translate=True)
+
 argparser.add_argument('--page', type=int, default=None)
 args = argparser.parse_args()
 
