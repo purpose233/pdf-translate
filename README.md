@@ -2,8 +2,8 @@
 A simple tool to translate text in pdf file.
 
 ## Introduction
-Basically, pdf-translator will parse the texts from pdf file and output to html/txt file after translation is completed.
-Pdf-translator will **keep the layout of pdf file unchanged** and **provide a comparison of the original text**, 
+Basically, pdf-translate will parse the texts from pdf file and output to html/txt file after translation is completed.
+Pdf-translate will **keep the layout of pdf file unchanged** and **provide a comparison of the original text**,
 so it will be easy to read the output file.
 
 
@@ -11,14 +11,14 @@ so it will be easy to read the output file.
 
 
 ## Usage
-For now, you can try the pre-release version of pdf-translator. 
+For now, you can try the pre-release version of pdf-translate.
 It still takes time to improve, but it works fine on simple pdf files.
 
-A simple command of using pdf-translator is:
-`.\pdf-translator.exe --src=.\test.pdf --out=.\output.html`
+A simple command of using pdf-translate is:
+`.\pdf-translate.exe --src=.\test.pdf --out=.\output.html`
 
 A complex one is: 
-`.\pdf-translator.exe --src=.\test.pdf --out=.\output.html --type=html --from_lang=en --to_lang=zh-CN --translate --page=1`
+`.\pdf-translate.exe --src=.\test.pdf --out=.\output.html --type=html --from_lang=en --to_lang=zh-CN --translate --page=1`
 
 Parameter|Usage|Value|Default
 ---|-----|---|--
@@ -46,8 +46,8 @@ max_font|the max font size of text which will show|Int|None
 
 
 ## Warning
-- Pdf-translator uses Google translate's api, so it needs to be updated once Google changes its way to generate token.
-- Before use the pdf-translator, you need to make sure that your computer has access to [Google translate](https://translate.google.cn/),
+- Pdf-translate uses Google translate's api, so it needs to be updated once Google changes its way to generate token.
+- Before use the pdf-translate, you need to make sure that your computer has access to [Google translate](https://translate.google.cn/),
 and it might work slow because of the http connection.
 - It works terrible on the special characters like mathematical marks, for now I just remove all of them. 
 So it might looks weird on formulas.
