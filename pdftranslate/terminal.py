@@ -3,15 +3,21 @@ import time
 
 
 class Terminal(object):
-    def __init__(self, path, dest='html', max_steps=50):
+    def __init__(self, path=None, dest='html', max_steps=50):
         self.max_steps = max_steps
         self.page_count = 0
         self.dest = dest
-        self.path = path
+        if path is None:
+            self.path = 'Unset'
+        else:
+            self.path = path
 
         self.curr_page = 0
         self.curr_translated = 0
         self.translated_count = 0
+
+    def set_path(self, path):
+        self.path = path
 
     def set_page_count(self, page_count):
         self.page_count = page_count

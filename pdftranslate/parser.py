@@ -228,11 +228,18 @@ class Parser(object):
         self.device = PDFPageAggregator(self.rsrcmgr, laparams=self.laparams)
         self.interpreter = PDFPageInterpreter(self.rsrcmgr, self.device)
 
+        self.pages = None
+
     def get_page_count(self):
-        return self.doc.get_pages()
+        return len(self.pages)
 
     def get_pages(self):
-        return self.doc.get_pages()
+        if self.pages is None:
+            # 由于 pages 是 generator，无法获取长度，因此先全部读取到内存中
+            self.pages = []
+            for page in self.doc.get_pages():
+                self.pages.append(page)
+        return self.pages
 
     def get_info(self):
         return self.doc.info

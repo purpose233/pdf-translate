@@ -8,7 +8,7 @@ from pdftranslate.parser import ParsedTextBox
 
 Index_url = r'https://translate.google.cn/'
 Base_url = r'https://translate.google.cn/translate_a/single'
-Supported_languages = ['en', 'zh-CN', 'ja']
+Supported_languages = ['en', 'zh-CN', 'ja', 'de', 'ru', 'fr']
 
 # 后续 TK 的计算方式可能还会改变，所以只能用着持续跟进了
 # 之前版本的 TKK 计算方式，现在已经被船新版本替代了

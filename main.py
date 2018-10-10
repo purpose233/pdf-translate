@@ -1,28 +1,39 @@
 import sys
 import argparse
+import re
 
 from pdftranslate.parser import Parser
 from pdftranslate.translator import Translator, Supported_languages
 from pdftranslate.printer import Printer, line_height_partial
 from pdftranslate.terminal import Terminal
 
-argparser = argparse.ArgumentParser(description='manual to this script')
-argparser.add_argument('--src', type=str, default=None, required=True)
-argparser.add_argument('--out', type=str, default=None, required=True)
-argparser.add_argument('--type', type=str, default='html')
-argparser.add_argument('--from_lang', type=str, default='en')
-argparser.add_argument('--to_lang', type=str, default='zh-CN')
-argparser.add_argument('--min_font', type=int, default=None)
-argparser.add_argument('--max_font', type=int, default=None)
-# argparser.add_argument('--translate', type=bool, default=True)
+Reg_required_page_array = "\[(-?[0-9]+),(-?[0-9]+)\]"
+Reg_required_page_number = "(-?[0-9]+)"
 
-translated_parser = argparser.add_mutually_exclusive_group(required=False)
-translated_parser.add_argument('--translate', dest='translate', action='store_true')
-translated_parser.add_argument('--no-translate', dest='translate', action='store_false')
-argparser.set_defaults(translate=True)
+terminal = Terminal()
 
-argparser.add_argument('--page', type=int, default=None)
-args = argparser.parse_args()
+try:
+    argparser = argparse.ArgumentParser(description='manual to this script')
+    argparser.add_argument('--src', type=str, default=None, required=True)
+    argparser.add_argument('--out', type=str, default=None, required=True)
+    argparser.add_argument('--type', type=str, default='html')
+    argparser.add_argument('--from_lang', type=str, default='en')
+    argparser.add_argument('--to_lang', type=str, default='zh-CN')
+    argparser.add_argument('--min_font', type=int, default=None)
+    argparser.add_argument('--max_font', type=int, default=None)
+    # argparser.add_argument('--translate', type=bool, default=True)
+
+    translated_parser = argparser.add_mutually_exclusive_group(required=False)
+    translated_parser.add_argument('--translate', dest='translate', action='store_true')
+    translated_parser.add_argument('--no-translate', dest='translate', action='store_false')
+    argparser.set_defaults(translate=True)
+
+    argparser.add_argument('--page', type=str, default=None)
+    args = argparser.parse_args()
+
+except Exception as e:
+    terminal.show_error(repr(e))
+    sys.exit(1)
 
 src_path = args.src
 out_path = args.out
@@ -30,34 +41,75 @@ out_type = args.type
 from_lang = args.from_lang
 to_lang = args.to_lang
 translated = args.translate
-page_count = args.page
 
-terminal = Terminal(out_path)
+required_page = args.page
+required_page_info = dict({
+    'count': -1,
+    'begin': -1,
+    'end': -1,
+    'error': None,
+    'warning': None
+})
 
 
 def call_terminal():
     terminal.finish_translated()
 
 
+def parse_required_page(info, input, length):
+    if input is not None:
+        ret = re.match(Reg_required_page_array, input)
+        if ret is None:
+            ret = re.match(Reg_required_page_number, input)
+            if ret is None:
+                info.error = '不合法的 page 输入！'
+            else:
+                a = int(input)
+                if 0 < a <= length:
+                    info['begin'] = 1
+                    info['end'] = a
+                    info['count'] = a
+                else:
+                    info.error = '不合法的 page 输入，请检查输入数字是否正确！'
+        else:
+            regs = ret.regs
+            a = int(ret.string[regs[1][0]:regs[1][1]])
+            b = int(ret.string[regs[2][0]:regs[2][1]])
+            if 0 < a <= b <= length:
+                info['begin'] = a
+                info['end'] = b
+                info['count'] = info['end'] - info['begin'] + 1
+            else:
+                info.error = '不合法的 page 输入，请检查开始与结束页号是否正确！'
+    else:
+        info['begin'] = 1
+        info['end'] = length
+        info['count'] = length
+    return info
+
+
 if src_path is None or out_path is None:
     terminal.show_error('--src 以及 --out 参数不得为空！')
     sys.exit(1)
+
+terminal.set_path(out_path)
 
 if from_lang not in Supported_languages or to_lang not in Supported_languages or \
                 from_lang == to_lang:
     translated = False
     terminal.show_warning('不合法的输入与输出语言，程序将禁用翻译功能。')
-    sys.exit(1)
-
-if page_count is not None and page_count < 1:
-    terminal.show_warning('转换的页数需大于等于1，将默认转换全部内容')
-    page_count = None
 
 text_filter = line_height_partial(max=args.max_font, min=args.min_font)
 
 try:
     parser = Parser(src_path)
     pages = parser.get_pages()
+
+    required_page_info = parse_required_page(required_page_info, required_page, parser.get_page_count())
+    if required_page_info['error']:
+        raise RuntimeError(required_page_info['error'])
+
+    terminal.set_page_count(required_page_info['count'])
 
     if out_type == 'html':
         printer = Printer(out_path, title=parser.get_title(), type='html')
@@ -70,20 +122,11 @@ try:
     if translated is True:
         translator = Translator()
 
-    # 由于 pages 是 generator，无法获取长度，因此先全部读取到内存中
-    stored_pages = []
-    for page in pages:
-        stored_pages.append(page)
-
-    if page_count is not None:
-        terminal.set_page_count(page_count)
-    else:
-        terminal.set_page_count(len(stored_pages))
-
     terminal.show_begin()
 
-    count = 0
-    for page in stored_pages:
+    count = required_page_info['begin']
+    while count <= required_page_info['end']:
+        page = pages[count - 1]
         parsed_layout = parser.parse_page(page)
 
         terminal.begin_page(parsed_layout.get_translated_count())
@@ -95,8 +138,21 @@ try:
         elif out_type == 'txt':
             printer.print_txt_page(parsed_layout)
         count += 1
-        if page_count is not None and count >= page_count:
-            break
+
+    # for page in pages:
+    #     parsed_layout = parser.parse_page(page)
+    #
+    #     terminal.begin_page(parsed_layout.get_translated_count())
+    #
+    #     if translated is True:
+    #         translator.translate_layout(parsed_layout, from_lang, to_lang, call_terminal)
+    #     if out_type == 'html':
+    #         printer.print_html_page(parsed_layout, text_filter=text_filter)
+    #     elif out_type == 'txt':
+    #         printer.print_txt_page(parsed_layout)
+    #     count += 1
+    #     if page_count is not None and count >= page_count:
+    #         break
     printer.save()
 except Exception as e:
     terminal.show_error(repr(e))

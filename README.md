@@ -25,18 +25,29 @@ Parameter|Usage|Value|Default
 src|the source of pdf file|String|*Required*
 out|the path of output file|String|*Required*
 type|the output type of file|html/txt|html
-from_lang|the origin language|en/zh-CN/ja|en
-to_lang|the target language|en/zh-CN/ja|zh-CN
+from_lang|the origin language|see table below|en
+to_lang|the target language|see table below|zh-CN
 translate|flag of translating the text|None|True
 no-translate|flag of not translating the text|None|True
-page|the number of page which need to be operated|Int|all pages
+page|the number of page which need to be operated|[begin,end]/Int|all pages
 min_font|the min font size of text which will show|Int|None
 max_font|the max font size of text which will show|Int|None
+
+Supported languages is shown as below:
+
+Language|Input
+--|--
+Simplified Chinese|zh-CN
+English|en
+Japanese|ja
+German|de
+Russian|ru
+French|fr
+
 
 
 ## TODOs
 - Add hints of parameters.
-- Support more languages.
 - Parse and show the images from pdf.
 - Remove the warnings from pdfminer.
 - Handle complex styles of text including spinning, color and so on.
