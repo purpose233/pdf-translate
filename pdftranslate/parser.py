@@ -183,6 +183,16 @@ class ParsedTextBox(ParsedObject):
                 return line
 
 
+class ParsedLine(ParsedObject):
+    def __init__(self, item):
+        ParsedObject.__init__(self, item)
+
+
+class ParsedRect(ParsedObject):
+    def __init__(self, item):
+        ParsedObject.__init__(self, item)
+
+
 def parse_item(item, root):
     if isinstance(item, LTTextBox):
         root.append_child(ParsedTextBox(item))

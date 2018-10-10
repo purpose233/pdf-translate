@@ -49,7 +49,7 @@ if from_lang not in Supported_languages or to_lang not in Supported_languages or
     terminal.show_warning('不合法的输入与输出语言，程序将禁用翻译功能。')
     sys.exit(1)
 
-if page_count < 1:
+if page_count is not None and page_count < 1:
     terminal.show_warning('转换的页数需大于等于1，将默认转换全部内容')
     page_count = None
 
@@ -105,12 +105,15 @@ except Exception as e:
 terminal.show_end()
 
 
-# TODO: 针对于具体错误进行处理
-# TODO: 补全对于jpeg image 的处理
-# TODO: 纯文本处理
-# TODO: 打包成 exe
+# TODO: 处理 bezier 曲线、直线、表格等 pdf 元素
+# TODO: page 参数改变，用 [x,y] / count 替代
+# TODO: 更多语言支持
+# TODO: 特殊字符的处理
+# TODO: 补全对于 image 的处理
 # TODO: 去除 pdfminer 的 warning
 # TODO: 一个 textbox 内部可能有一个复杂的相对位置的结构，同时看起来在同一个 box 内部的文字可能会分在两个部分，导致出现遮挡问题
-# TODO: 竖排文字的处理，可能还有旋转之类的操作。。。
+# TODO: 处理复杂文字样式：竖排文字，可能还有旋转之类的。。。
+# TODO: 输出的 html 屏幕适配
+# TODO: 输出的 html 中添加一键复制等功能
 
-# 示例输入：python ./main.py --src=./temp/test01.pdf --out=./temp/output.html --type=html --from_lang=en --to_lang=zh-CN --translate=1 --page=1
+# 示例输入：python ./main.py --src=./temp/test01.pdf --out=./temp/output.html --type=html --from_lang=en --to_lang=zh-CN --no-translate --page=1

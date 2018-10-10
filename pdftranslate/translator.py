@@ -156,6 +156,9 @@ class Translator(object):
 
     def translate_layout(self, root, from_language, to_language, callback=None):
         for item in root.children:
+            if not isinstance(item, ParsedTextBox):
+                continue
+
             self._translate_item(item, from_language, to_language)
             if callback is not None:
                 callback()
