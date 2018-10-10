@@ -19,6 +19,24 @@
     return s.replace(/(\s*$)/g, "");
   }
 
+  function findMaxPageWidth(pages) {
+    let maxWidth = 0;
+    for (let page of pages) {
+      if (page.width > maxWidth) {
+        maxWidth = page.width;
+      }
+    }
+    return maxWidth;
+  }
+
+  function calcScrollX(width) {
+    let clientWidth = document.documentElement.clientWidth;
+    if (width <= clientWidth) {
+      return 0;
+    }
+    return (width - clientWidth) / 2;
+  }
+
   // 将 px 结尾的样式字符串转换为 double 数据
   function pxstyleToFloat(string) {
     // 基本上，如果仅仅是 px 结尾的都是可以直接 parseFloat 的
@@ -400,6 +418,14 @@
   }
 </script>
 <script>
+  let mainEl = document.getElementById('main');
+  let minWidth = findMaxPageWidth(pagesData) + 1000;
+  mainEl.style.minWidth = minWidth + 'px';
+  window.onload = () => {
+    window.scrollTo(calcScrollX(minWidth), 0);
+  };
+
+
   let hintEl = document.getElementById('hint');
   let hint = new Hint(hintEl);
 
